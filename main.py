@@ -36,6 +36,7 @@ def download_reel(url: str):
 
         r = requests.get(api_url, headers=headers).json()
 
+        # new working video path
         video_url = r["items"][0]["video_versions"][0]["url"]
 
         return {
