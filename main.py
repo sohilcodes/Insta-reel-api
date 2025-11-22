@@ -1,22 +1,46 @@
 from fastapi import FastAPI
-import instaloader
+import requests
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/")
 def home():
-    return {"message": "API is running..."}
+    return {"message": "API running successfully"}
 
 @app.get("/api")
-def reel(url: str):
+def download_reel(url: str):
+
     try:
-        loader = instaloader.Instaloader()
+        # Clean URL
+        if "?igsh" in url:
+            url = url.split("?")[0]
+
         shortcode = url.split("/")[-2]
-        post = instaloader.Post.from_shortcode(loader.context, shortcode)
+
+        api_url = f"https://www.instagram.com/reel/{shortcode}/?__a=1&__d=dis"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        }
+
+        r = requests.get(api_url, headers=headers).json()
+
+        video_url = r["items"][0]["video_versions"][0]["url"]
 
         return {
             "status": "ok",
-            "video": post.video_url
+            "video": video_url
         }
 
     except Exception as e:
